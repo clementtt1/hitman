@@ -10,5 +10,6 @@ export enum Actions {
     BLOCK = 'BLOCK',
     REPLICATE = 'REPLICATE',
     PICK_BOTTOM = 'PICK_BOTTOM',
-    DRAW = 'DRAW'
+    DRAW = 'DRAW',
+    PLAY_CARD = 'PLAY_CARD'
 }

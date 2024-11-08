@@ -15,10 +15,12 @@ export default class Packet implements IPacket {
         const colors = ['red', 'green', 'blue', 'yellow'];
     
         Object.values(Actions).forEach(action => {
-            colors.forEach(color => {
-                let description = this.getDescription(action);
-                this.pile.push(new Card(action, color, description, ""));
-            });
+            if(action != Actions.PLAY_CARD){
+                    colors.forEach(color => {
+                    let description = this.getDescription(action);
+                    this.pile.push(new Card(action, color, description, ""));
+                });
+            }
         });
     
         this.shuffle(this.pile);
@@ -26,11 +28,13 @@ export default class Packet implements IPacket {
     }
     
 
-    shuffle(deck: Card[]): void {
+    shuffle(deck: Card[]): Card[] {
         for (let i = deck.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [deck[i], deck[j]] = [deck[j], deck[i]];
         }
+        this.pile = deck;
+        return this.pile
     }
 
     getDescription(action: string): string {
