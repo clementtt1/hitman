@@ -1,9 +1,9 @@
-import type { IPacket } from "./IPacket"
+import type { ICard } from "./ICard"
 import { Status } from "../enums/Status"
 
 export interface IPlayer {
-    uid: number
+    uuid: string
     name: string
-    deck: IPacket
+    deck: ICard[]
     status: Status
 }

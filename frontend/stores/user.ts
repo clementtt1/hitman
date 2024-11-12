@@ -19,11 +19,10 @@ export const useMyUserStore = defineStore({
       const initialPile: Card[] = [];
       const packet = new Packet(initialPile, 52);
       const deck = packet.generateDeck();
-
       this.deck = deck;
       this.hand = [];
 
-      this.hand.push(new Card(Actions.REVIVE, "", "Save you from being killed.", ""))
+      this.hand.push(new Card(Actions.REVIVE, "",  "Save you from being killed.", ""))
       
       this.deck.slice(0, 4).forEach(card => {
         this.hand.push(card)
@@ -83,7 +82,7 @@ export const useMyUserStore = defineStore({
         }
       }
 
-      var hasReviveCard = false;
+    var hasReviveCard = false;
     var indiceRevive = -1;
     for(let indice = 0; indice < this.hand.length; indice++){
       if(this.hand[indice].action == Actions.REVIVE){
