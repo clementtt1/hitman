@@ -120,10 +120,6 @@ onMounted(() => {
     path: '/api/socket.io'
   })
 
-  socket.value.on('connected', (message: { message: string }) => {
-    console.log(message)
-  })
-
   socket.value.on('deck', (updatedDeck: Card[]) => {
     deck.value = updatedDeck  
   })

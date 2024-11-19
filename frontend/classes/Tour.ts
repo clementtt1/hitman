@@ -26,7 +26,7 @@ export default class Tour implements ITour {
         if (newCard) {
             hashMap.set(packet, newCard);
         }
-        console.log(newCard);
+
         return hashMap;
     }
 

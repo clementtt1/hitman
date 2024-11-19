@@ -58,6 +58,14 @@ export function initSocket(event: H3Event) {
             }
         })
 
+        socket.on('drawBottomCard', () => {
+            if (deck.length > 0) {
+                const drawnCard = deck.pop() 
+                io.of('/play').emit('deck', deck)  
+                socket.emit('cardDrawn', drawnCard) 
+            }
+        })
+
         socket.on('disconnect', () => {
             console.log('Player disconnected:', socket.id)
             players.delete(socket.id)

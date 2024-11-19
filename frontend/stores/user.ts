@@ -4,6 +4,7 @@ import Card from "../classes/Card"
 import { Actions } from "../enums/Actions"
 import Tour from '~/classes/Tour'
 import { Status } from '~/enums/Status'
+import { io } from 'socket.io-client'
 
 export const useMyUserStore = defineStore({
   id: 'myUserStore',
@@ -27,85 +28,6 @@ export const useMyUserStore = defineStore({
       this.deck.slice(0, 4).forEach(card => {
         this.hand.push(card)
       })
-    },
-    pickUpCard(){
-      const tour = new Tour(Actions.DRAW);
-      const state = tour.drawCard(this.deck)
-      const drawnCard = state.get(this.deck)
-      var hasReviveCard = false;
-      var indiceRevive = -1;
-      for(let indice = 0; indice < this.hand.length; indice++){
-        if(this.hand[indice].action == Actions.REVIVE){
-          hasReviveCard = true
-          indiceRevive = indice;
-        }
-      }
-      console.log(hasReviveCard);
-    
-      // Vérifier si la carte piochée est HITMAN
-      if (drawnCard?.action === Actions.HITMAN) {
-        console.log("Carte HITMAN piochée - elle sera retirée de la main");
-        // Ne pas ajouter HITMAN à la main, activer son effet immédiatement si nécessaire
-        
-        if(hasReviveCard){
-          this.activateHitmanEffect(); // Fonction pour gérer l'effet de HITMAN
-          this.useCard(indiceRevive);
-        }
-      } else {
-        Status.DEAD;
-        if (drawnCard) {
-          this.hand.push(drawnCard);
-        }
-      }
-    
-      // Mettre à jour le deck avec la nouvelle version sans la carte piochée
-      if (Array.from(state.keys())[0]) {
-        this.deck = Array.from(state.keys())[0];
-      }
-    },
-    pickUpBottomCard(){
-      const tour = new Tour(Actions.PICK_BOTTOM);
-      const state = tour.drawBottomCard(this.deck)
-      const drawnCard = state.get(this.deck)
-
-      if(this.deck.length == 0){
-        if (drawnCard) {
-          this.deck.push(drawnCard);
-        }
-      }
-      else{
-        if (Array.from(state.keys())[0]) {
-          this.deck = Array.from(state.keys())[0]; //nouveau deck
-          if(drawnCard){
-            this.hand.push(drawnCard);
-          }
-        }
-      }
-
-    var hasReviveCard = false;
-    var indiceRevive = -1;
-    for(let indice = 0; indice < this.hand.length; indice++){
-      if(this.hand[indice].action == Actions.REVIVE){
-        hasReviveCard = true
-        indiceRevive = indice;
-      }
-    }
-
-      // Vérifier si la carte piochée est HITMAN
-    if (drawnCard?.action === Actions.HITMAN) {
-      console.log("Carte HITMAN piochée - elle sera retirée de la main");
-      // Ne pas ajouter HITMAN à la main, activer son effet immédiatement si nécessaire
-      
-      if(hasReviveCard){
-        this.activateHitmanEffect(); // Fonction pour gérer l'effet de HITMAN
-        this.useCard(indiceRevive);
-      }
-    } else {
-      Status.DEAD;
-      if (drawnCard) {
-        this.hand.push(drawnCard);
-      }
-    }
     },
     useCard(nb: number){
       const tour = new Tour(Actions.PLAY_CARD);
@@ -192,9 +114,11 @@ export const useMyUserStore = defineStore({
         }
         case Actions.PICK_BOTTOM:
           if(this.deck){
-          this.pickUpBottomCard();
-          break;
-        }
+            io('/play', {
+              path: '/api/socket.io'
+            }).emit('drawBottomCard') 
+            break;
+          }
         default:
             return "No description available.";
             break;
