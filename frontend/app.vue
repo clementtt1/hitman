@@ -159,8 +159,11 @@ onMounted(() => {
     });
 
     socket.value.on('suffleDeck', (cards: Card[]) => {
-        deck.value = cards
-        console.log("cc")
+      console.log(cards) 
+      console.log(deck.value)  
+      deck.value = cards
+      console.log(deck.value) 
+      console.log("cc")
     });
 })
 
