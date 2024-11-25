@@ -6,6 +6,10 @@ import Tour from '~/classes/Tour'
 import { Status } from '~/enums/Status'
 import { io } from 'socket.io-client'
 
+const socket = io('/play', {
+  path: '/api/socket.io'
+});
+
 export const useMyUserStore = defineStore({
   id: 'myUserStore',
   state: () => ({
@@ -95,11 +99,9 @@ export const useMyUserStore = defineStore({
             const newDeck = new Packet(this.deck, this.deck.length);
             return newDeck.shuffle(newDeck.pile);
         case Actions.EYE:
-            const cards = this.seeCards(this.deck)
-            console.log(cards[0])
-            console.log(cards[1])
-            console.log(cards[2])
-            return cards;
+            console.log("OUI")
+            socket.emit('seeCards') 
+            break;
         case Actions.BLOCK:
             return "Block the next action against you.";
             break;
@@ -113,10 +115,9 @@ export const useMyUserStore = defineStore({
           break;
         }
         case Actions.PICK_BOTTOM:
+          console.log("NON")
           if(this.deck){
-            io('/play', {
-              path: '/api/socket.io'
-            }).emit('drawBottomCard') 
+            socket.emit('drawBottomCard')
             break;
           }
         default:

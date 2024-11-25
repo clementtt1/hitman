@@ -59,12 +59,28 @@ export function initSocket(event: H3Event) {
         })
 
         socket.on('drawBottomCard', () => {
+            console.log("NOOOOOOOOON")
             if (deck.length > 0) {
-                const drawnCard = deck.pop() 
+                //const drawnCard = deck.pop()
+                console.log("1") 
+                const drawnCard = deck.pop()
+                console.log("2")
+                console.log(drawnCard)
                 io.of('/play').emit('deck', deck)  
                 socket.emit('cardDrawn', drawnCard) 
             }
         })
+
+        socket.on('seeCards', () => {
+            console.log("OUIIIIII"); 
+            if (deck.length >= 3) {
+                const cards = [deck[0], deck[1], deck[2]];
+                socket.emit('seeCards', cards); 
+            } else {
+                console.log('Deck has less than 3 cards.');
+            }
+        });
+        
 
         socket.on('disconnect', () => {
             console.log('Player disconnected:', socket.id)

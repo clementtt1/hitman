@@ -133,6 +133,14 @@ onMounted(() => {
       userStore.hand.push(drawnCard)  
     }
   })
+
+  socket.value.on('seeCards', (cards: Card[]) => {
+    console.log("test")
+    console.log(cards[0]);
+    console.log(cards[1]);
+    console.log(cards[2]);
+  });
+
 })
 
 onBeforeUnmount(() => {
