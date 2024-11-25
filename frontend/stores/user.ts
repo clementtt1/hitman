@@ -5,39 +5,45 @@ import { Actions } from "../enums/Actions"
 import Tour from '~/classes/Tour'
 import { Status } from '~/enums/Status'
 import { io, Socket } from 'socket.io-client'
+import type Player from '~/classes/Player'
 
 const socket = io('/play', {
   path: '/api/socket.io'
 });
 
 export const useMyUserStore = defineStore({
-  id: 'myUserStore',
-  state: () => ({
-    deck: [] as Card[],
-    hand: [] as Card[],
-    lastPlayedCard: null as Card | null,
-    isHitmanActive: false
-  }),
-  
-  actions: {
-    distributeCard() {
-      const initialPile: Card[] = [];
-      const packet = new Packet(initialPile, 52);
-      const deck = packet.generateDeck();
-      this.deck = deck;
-      this.hand = [];
+    id: 'myUserStore',
 
-      this.hand.push(new Card(Actions.REVIVE, "",  "Save you from being killed.", ""))
-      
-      this.deck.slice(0, 4).forEach(card => {
-        this.hand.push(card)
-      })
-    },
-    useCard(nb: number, socket: Socket){
-      const tour = new Tour(Actions.PLAY_CARD);
-      const state = tour.playCard(this.hand, nb)
-      const cardPlayed = state.get(this.hand)
-      //console.log(cardPlayed)
+    state: () => ({
+        deck: [] as Card[],
+        hand: [] as Card[],        
+        lastPlayedCard: null as Card | null,
+        isHitmanActive: false,
+        players: [] as Player[]
+    }),
+    actions: {
+        distributeCard(socket: Socket) {
+            socket.emit("distributeCard")
+        },
+        updateHands(players: { uuid: string, hand: Card[] }[]) {
+            players.forEach(playerData => {
+                const player = this.players.find(p => p.uuid === playerData.uuid)
+                if (player) {
+                    player.hand = playerData.hand
+                } else {
+                    this.players.push({
+                        uuid: playerData.uuid,
+                        hand: playerData.hand,
+                        name: "",
+                        status: Status.ALIVE
+                    })
+                }
+            })
+        },
+        useCard(nb: number, socket: Socket) {
+            const tour = new Tour(Actions.PLAY_CARD)
+            const state = tour.playCard(this.hand, nb)
+            const cardPlayed = state.get(this.hand)
       
       /*if(cardPlayed?.action == Actions.PICK_BOTTOM){
         tour.drawBottomCard(this.deck);
@@ -121,5 +127,10 @@ export const useMyUserStore = defineStore({
             break;
             }
         }
-    }
+    },
+    getters: {
+        getPlayersHands(): any {
+            return this.players.map(player => player.hand)
+        }
+      }
 })
