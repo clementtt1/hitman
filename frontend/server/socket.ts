@@ -75,6 +75,15 @@ export function initSocket(event: H3Event) {
             }
         });
 
+        socket.on('suffleDeck', () => {
+            console.log("oui et toi")
+            const newDeck = new Packet(deck, deck.length); 
+            console.log(newDeck.pile[0].action)
+            newDeck.shuffle(newDeck.pile);
+            console.log(newDeck.pile[0].action)
+            socket.emit("suffleDeck", newDeck)
+        });
+
         socket.on('disconnect', () => {
             console.log('Player disconnected:', socket.id)
             players.delete(socket.id)

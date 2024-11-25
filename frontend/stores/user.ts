@@ -72,12 +72,6 @@ export const useMyUserStore = defineStore({
      //console.log(lastCard)
       return lastCard
     },
-    seeCards(deck: Card[]){
-      const card1 = deck[0];
-      const card2 = deck[1];
-      const card3 = deck[2];
-      return [card1, card2, card3]
-    },
     playerChoice(choice: Actions, socket: Socket){
       switch (choice) {
         case Actions.DRAW:
@@ -99,8 +93,9 @@ export const useMyUserStore = defineStore({
             return "Steal a card from an opponent.";
             break;
         case Actions.SHUFFLE:
-            const newDeck = new Packet(this.deck, this.deck.length);
-            return newDeck.shuffle(newDeck.pile);
+            console.log("cc cv")
+            socket.emit('suffleDeck') 
+            break;
         case Actions.EYE:
             socket.emit('seeCards') 
             break;

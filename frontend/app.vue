@@ -146,6 +146,11 @@ onMounted(() => {
         console.log(cards[1]);
         console.log(cards[2]);
     });
+
+    socket.value.on('suffleDeck', (cards: Card[]) => {
+        deck.value = cards
+        console.log("cc")
+    });
 })
 
 onBeforeUnmount(() => {
