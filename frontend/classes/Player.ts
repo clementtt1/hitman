@@ -6,13 +6,13 @@ import Card from "~/classes/Card"
 export default class Player implements IPlayer {
     uuid: string
     name: string
-    deck: Card[]
+    hand: Card[]
     status: Status
 
-    constructor(uuid: string, name: string, deck: Card[], status: Status) {
+    constructor(uuid: string, name: string, hand: Card[] = [], status: Status) {
         this.uuid = uuid,
         this.name = name,
-        this.deck = deck,
+        this.hand = hand,
         this.status = status
     }
 }

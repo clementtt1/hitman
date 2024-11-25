@@ -4,6 +4,6 @@ import { Status } from "../enums/Status"
 export interface IPlayer {
     uuid: string
     name: string
-    deck: ICard[]
+    hand: ICard[]
     status: Status
 }

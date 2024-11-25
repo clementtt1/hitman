@@ -4,6 +4,7 @@ import type { H3Event } from 'h3'
 import Player from '~/classes/Player'
 import Card from '~/classes/Card'
 import Packet from '~/classes/Packet'
+import { Actions } from '~/enums/Actions'
 
 const options: Partial<ServerOptions> = {
     path: '/api/socket.io',
@@ -38,7 +39,7 @@ export function initSocket(event: H3Event) {
         socket.emit('connected', { message: 'Connection established.' })
         
         socket.on('player', (playerData: Player) => {
-            const player = new Player(playerData.uuid, playerData.name, playerData.deck, playerData.status) 
+            const player = new Player(playerData.uuid, playerData.name, playerData.hand, playerData.status) 
             players.set(socket.id, player)  
             console.log('Player added:', player)
 
@@ -49,6 +50,21 @@ export function initSocket(event: H3Event) {
             io.of('/play').emit('players', Array.from(players.values()))
             socket.emit('deck', deck)  
         })
+
+        socket.on('distributeCard', () => {
+            players.forEach(player => {
+                player.hand.push(new Card(Actions.REVIVE, "", "Save you from being killed.", ""))
+
+                deck.slice(0, 4).forEach(card => {
+                    player.hand.push(card)  
+                })
+            });
+        
+            io.of('/play').emit('updateHands', Array.from(players.values()).map(player => ({
+                uuid: player.uuid,
+                hand: player.hand
+            })))
+        });
 
         socket.on('drawCard', () => {
             if (deck.length > 0) {
