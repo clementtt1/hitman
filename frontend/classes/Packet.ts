@@ -27,7 +27,6 @@ export default class Packet implements IPacket {
         return this.pile;
     }
     
-
     shuffle(deck: Card[]): Card[] {
         for (let i = deck.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -67,5 +66,4 @@ export default class Packet implements IPacket {
                 return "No description available.";
         }
     }
-    
 }

@@ -9,27 +9,6 @@ export default class Tour implements ITour {
         this.action = action;
     }
 
-    drawCard(packet: Card[]): Map<Card[], Card> {
-        const newCard = packet.shift();
-        const hashMap = new Map<Card[], Card>();
-    
-        if (newCard) {
-            hashMap.set(packet, newCard);
-        }
-        return hashMap;
-    }
-
-    drawBottomCard(packet: Card[]): Map<Card[], Card> {
-        const newCard = packet.pop();
-        const hashMap = new Map<Card[], Card>();
-    
-        if (newCard) {
-            hashMap.set(packet, newCard);
-        }
-
-        return hashMap;
-    }
-
     playCard(packet: Card[], nb: number): Map<Card[], Card> {
         const cardPlayed = packet[nb];
         const hashMap = new Map<Card[], Card>();

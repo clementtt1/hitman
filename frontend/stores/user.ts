@@ -4,7 +4,7 @@ import Card from "../classes/Card"
 import { Actions } from "../enums/Actions"
 import Tour from '~/classes/Tour'
 import { Status } from '~/enums/Status'
-import { io } from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 
 const socket = io('/play', {
   path: '/api/socket.io'
@@ -33,7 +33,7 @@ export const useMyUserStore = defineStore({
         this.hand.push(card)
       })
     },
-    useCard(nb: number){
+    useCard(nb: number, socket: Socket){
       const tour = new Tour(Actions.PLAY_CARD);
       const state = tour.playCard(this.hand, nb)
       const cardPlayed = state.get(this.hand)
@@ -53,7 +53,7 @@ export const useMyUserStore = defineStore({
       }
 
       if(cardPlayed){
-        this.playerChoice(cardPlayed.action)
+        this.playerChoice(cardPlayed.action, socket)
       }
     },
     executeHitmanAction(targetNumber: number) {
@@ -78,11 +78,14 @@ export const useMyUserStore = defineStore({
       const card3 = deck[2];
       return [card1, card2, card3]
     },
-    playerChoice(choice: Actions){
+    playerChoice(choice: Actions, socket: Socket){
       switch (choice) {
+        case Actions.DRAW:
+            socket.emit('drawCard') 
+            break;
         case Actions.HITMAN:
-          this.isHitmanActive = true;
-          break;
+            this.isHitmanActive = true;
+            break;
         case Actions.SKIP:
             return "Skip the next player's turn.";
             break;
@@ -99,7 +102,6 @@ export const useMyUserStore = defineStore({
             const newDeck = new Packet(this.deck, this.deck.length);
             return newDeck.shuffle(newDeck.pile);
         case Actions.EYE:
-            console.log("OUI")
             socket.emit('seeCards') 
             break;
         case Actions.BLOCK:
@@ -115,15 +117,14 @@ export const useMyUserStore = defineStore({
           break;
         }
         case Actions.PICK_BOTTOM:
-          console.log("NON")
-          if(this.deck){
+          if(this.deck) {
             socket.emit('drawBottomCard')
             break;
           }
         default:
             return "No description available.";
             break;
+            }
+        }
     }
-    }
-  }
 })

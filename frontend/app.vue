@@ -18,7 +18,7 @@
         <h2 class="text-xl font-semibold text-gray-700">Bienvenue, {{ playerName }} !</h2>
         <div class="flex space-x-4">
           <button @click="generateDeck" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300">Générer le deck</button>
-          <button @click="drawCard" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+          <button @click="playerMove(999, true)" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
             Tirer une carte
           </button>
         </div>
@@ -49,7 +49,7 @@
         <ul class="space-y-2">
           <li v-for="(card, index) in hand" :key="index" class="flex justify-between items-center p-2 bg-white rounded-lg shadow-sm">
             <span class="text-gray-700">{{ card.action }} - {{ card.description }}</span>
-            <button @click="playCard(index)" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">Jouer</button>
+            <button @click="playerMove(index, false)" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">Jouer</button>
           </li>
         </ul>
       </div>
@@ -78,12 +78,13 @@ import { Status } from "~/enums/Status"
 import { io, Socket } from 'socket.io-client'
 import type Card from './classes/Card'
 import type Player from './classes/Player'
+import { Actions } from "../enums/Actions"
 
 const userStore = useMyUserStore()
 const hand = computed(() => userStore.hand)
 const isHitmanActive = computed(() => userStore.isHitmanActive) 
 const hitmanNumber = ref<number | null>(null)
-const deck = ref<Card[]>([])  // Deck partagé récupéré du serveur
+const deck = ref<Card[]>([])  
 
 const players = ref<Player[]>([])  
 const isLoggedIn = ref<boolean>(false)
@@ -94,12 +95,12 @@ const generateDeck = () => {
   userStore.distributeCard()
 }
 
-const drawCard = () => {
-  socket.value?.emit('drawCard')  
-}
+const playerMove = (index: number, draw: boolean) => {
+    if(draw) {
+        userStore.playerChoice(Actions.DRAW, socket.value)
+    }
 
-const playCard = (index: number) => {
-  userStore.useCard(index)
+    userStore.useCard(index, socket.value)
 }
 
 const submitHitmanAction = () => {
@@ -116,35 +117,39 @@ function onSend() {
 }
 
 onMounted(() => {
-  socket.value = io('/play', {
-    path: '/api/socket.io'
-  })
+    socket.value = io('/play', {
+        path: '/api/socket.io'
+    })
 
-  socket.value.on('deck', (updatedDeck: Card[]) => {
-    deck.value = updatedDeck  
-  })
+    socket.value.on('deck', (updatedDeck: Card[]) => {
+        deck.value = updatedDeck  
+    })
 
-  socket.value.on('players', (playersList: Player[]) => {
-    players.value = playersList
-  })
+    socket.value.on('players', (playersList: Player[]) => {
+            players.value = playersList
+    })
 
-  socket.value.on('cardDrawn', (drawnCard: Card) => {
-    if (drawnCard) {
-      userStore.hand.push(drawnCard)  
-    }
-  })
+    socket.value.on('cardDrawn', (drawnCard: Card) => {
+        if (drawnCard) {
+            userStore.hand.push(drawnCard)  
+        }
+    })
 
-  socket.value.on('seeCards', (cards: Card[]) => {
-    console.log("test")
-    console.log(cards[0]);
-    console.log(cards[1]);
-    console.log(cards[2]);
-  });
+    socket.value.on('cardDrawnBottom', (drawnCard: Card) => {
+        if (drawnCard) {
+            userStore.hand.push(drawnCard)  
+        }
+    })
 
+    socket.value.on('seeCards', (cards: Card[]) => {
+        console.log(cards[0]);
+        console.log(cards[1]);
+        console.log(cards[2]);
+    });
 })
 
 onBeforeUnmount(() => {
-  socket.value?.disconnect()
+    socket.value?.disconnect()
 })
 </script>
 
