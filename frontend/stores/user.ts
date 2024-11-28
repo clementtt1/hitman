@@ -109,14 +109,7 @@ export const useMyUserStore = defineStore({
             return "Block the next action against you.";
             break;
         case Actions.REPLICATE:
-        if(this.lastPlayedCard){
-          this.replicate(this.lastPlayedCard);
-          break;
-        }
-        else{
-          this.hand.push(new Card(Actions.REPLICATE, 'blue', "Replicate a card from the discard pile.", ""));
-          break;
-        }
+            socket.emit('replicateCard')
         case Actions.PICK_BOTTOM:
           if(this.deck) {
             socket.emit('drawBottomCard')

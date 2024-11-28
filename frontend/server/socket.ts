@@ -100,6 +100,15 @@ export function initSocket(event: H3Event) {
             socket.emit("suffleDeck", newDeck)
         });
 
+        socket.on('replicateCard', () => {
+            if(lastPlayedCard){
+                replicate(lastPlayedCard);
+              }
+              else{
+                hand.push(new Card(Actions.REPLICATE, 'blue', "Replicate a card from the discard pile.", ""));
+              }
+        })
+
         socket.on('disconnect', () => {
             console.log('Player disconnected:', socket.id)
             players.delete(socket.id)
