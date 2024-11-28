@@ -154,6 +154,14 @@ onMounted(() => {
         userStore.deck = cards
         deck.value = cards
     })
+
+    socket.value.on('replicateCard', () => {
+        if(userStore.lastPlayedCard){
+            userStore.hand.push(userStore.lastPlayedCard)
+            console.log(userStore.lastPlayedCard.action)
+        }
+        playerMove(userStore.hand.length - 1, false)
+    })
 })
 
 onBeforeUnmount(() => {

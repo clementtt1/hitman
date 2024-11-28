@@ -89,12 +89,7 @@ export function initSocket(event: H3Event) {
         });
 
         socket.on('replicateCard', () => {
-            if(lastPlayedCard){
-                replicate(lastPlayedCard);
-              }
-              else{
-                hand.push(new Card(Actions.REPLICATE, 'blue', "Replicate a card from the discard pile.", ""));
-              }
+            socket.emit('replicateCard');
         })
 
         socket.on('disconnect', () => {
