@@ -44,9 +44,9 @@ export const useUserStore = defineStore({
             });
         },
 
-        useCard(nb: number, socket: Socket) {
+        useCard(index: number, socket: Socket) {
             const tour = new Tour(Actions.PLAY_CARD);
-            const state = tour.playCard(this.hand, nb);
+            const state = tour.playCard(this.hand, index);
             const cardPlayed = state.get(this.hand);
 
             if (cardPlayed && cardPlayed.action !== Actions.REPLICATE && cardPlayed.action !== Actions.HITMAN) {

@@ -9,10 +9,10 @@ export default class Tour implements ITour {
         this.action = action;
     }
 
-    playCard(packet: Card[], nb: number): Map<Card[], Card> {
-        const cardPlayed = packet[nb];
+    playCard(packet: Card[], index: number): Map<Card[], Card> {
+        const cardPlayed = packet[index];
         const hashMap = new Map<Card[], Card>();
-        packet.splice(nb, 1);
+        packet.splice(index, 1);
 
         if (cardPlayed) {
             hashMap.set(packet, cardPlayed);

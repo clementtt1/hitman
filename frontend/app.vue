@@ -1,6 +1,5 @@
 <template>
     <div class="flex items-center justify-center min-h-screen bg-gray-100 py-6 px-4 sm:px-6 lg:px-8">
-        <!-- Login Section -->
         <div v-if="!isLoggedIn" class="w-full max-w-md bg-white p-8 rounded-lg shadow-lg text-center">
             <h1 class="text-2xl font-semibold text-blue-600 mb-4">Bienvenue sur le jeu !</h1>
             <input
@@ -25,6 +24,8 @@
                 <div class="flex mt-3 space-x-2">
                     <AppCard :model-value="deck[0]?.action" class="cursor-pointer" />
                     <AppCard :model-value="deck[deck.length - 1]?.action" class="cursor-pointer" />
+                    <AppCard :model-value="userStore.lastPlayedCard?.action" class="cursor-pointer" />
+
                 </div>
             </div>
 
