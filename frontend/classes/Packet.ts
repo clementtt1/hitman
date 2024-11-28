@@ -16,7 +16,7 @@ export default class Packet implements IPacket {
     
         Object.values(Actions).forEach(action => {
             if(action != Actions.PLAY_CARD){
-                    colors.forEach(color => {
+                colors.forEach(color => {
                     let description = this.getDescription(action);
                     this.pile.push(new Card(action, color, description, ""));
                 });

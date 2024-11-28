@@ -70,7 +70,12 @@ export const useUserStore = defineStore({
         },
 
         replicate(lastCard: Card) {
-            
+            if (lastCard) {
+                const tour = new Tour(Actions.REPLICATE);
+                return lastCard;
+            } else {
+                this.hand.push(new Card(Actions.REPLICATE, 'blue', "Replicate a card from the discard pile.", ""));
+            }
         },
 
         playerChoice(choice: Actions, socket: Socket) {
@@ -84,7 +89,7 @@ export const useUserStore = defineStore({
                 [Actions.SHUFFLE]: () => socket.emit('suffleDeck'),
                 [Actions.EYE]: () => socket.emit('seeCards'),
                 [Actions.BLOCK]: () => "Block the next action against you.",
-                [Actions.REPLICATE]: () => socket.emit('replicateCard'),
+                [Actions.REPLICATE]: () => this.replicate(this.lastPlayedCard),
                 [Actions.PICK_BOTTOM]: () => socket.emit('drawBottomCard'),
                 default: () => "No description available."
             };

@@ -20,41 +20,48 @@ function generateDeck() {
     const packet = new Packet([], 52)
     deck = packet.generateDeck()
     io.of('/play').emit('deck', deck)  
+
+    players.forEach((player) => {
+        player.hand.push(new Card(Actions.REVIVE, "", "Save you from being killed.", ""))
+
+        for (let i = 0; i < 4; i++) {
+            const randomCard = getRandomCard();
+            player.hand.push(randomCard);
+        }
+    })
+}
+
+function getRandomCard(): Card {
+    const randomIndex = Math.floor(Math.random() * deck.length); 
+    const randomCard = deck[randomIndex]; 
+    deck.splice(randomIndex, 1); 
+    return randomCard;
 }
 
 export function initSocket(event: H3Event) {
     // @ts-ignore
     io.attach(event.node.res.socket?.server)
+    
 
     io.of('/play').on('connection', (socket) => {
-        socket.on('player', (playerData: Player) => {
-            const player = new Player(playerData.uuid, playerData.name, playerData.hand, playerData.status) 
-            players.set(player.uuid, player)  
-            console.log('Player added:', player)
+        console.log('A player connected:', socket.id)
 
-            if (deck.length === 0) {
-                generateDeck()  
-            }
-
-            io.of('/play').emit('players', Array.from(players.values()))
-            socket.emit('deck', deck)  
-        })
-
-        socket.on('distributeCard', () => {
-            players.forEach((player) => {
-                player.hand.push(new Card(Actions.REVIVE, "red", "apagnan", ""))
-
-                if(player.name === "A") {
-                    player.hand.push(new Card(Actions.BLOCK, "red", "apagnan", ""))
-                }
-            })
-        
-            io.of('/play').emit('updateHands', Array.from(players.values()).map(player => ({
+        socket.on('startGame', () => {
+            generateDeck();  
+            io.of('/play').emit('deck', deck);
+            io.of('/play').emit('distributeCard', Array.from(players.values()).map(player => ({
                 uuid: player.uuid,
                 hand: player.hand
             })));
+            io.of('/play').emit('startGame'); 
         });
-        
+
+        socket.on('player', (playerData: Player) => {
+            const player = new Player(playerData.uuid, playerData.name, playerData.hand, playerData.status) 
+            players.set(player.uuid, player)  
+            io.of('/play').emit('players', Array.from(players.values()))
+        })
+
         socket.on('drawCard', () => {
             if (deck.length > 0) {
                 const drawnCard = deck.shift() 
@@ -72,19 +79,13 @@ export function initSocket(event: H3Event) {
         })
 
         socket.on('seeCards', () => {
-            if (deck.length >= 3) {
-                const cards = [deck[0], deck[1], deck[2]];
-                socket.emit('seeCards', cards); 
-            } else {
-                console.log('Deck has less than 3 cards.');
-            }
+            const cards = [deck[0], deck[1], deck[2]];
+            socket.emit('seeCards', cards); 
         });
 
         socket.on('suffleDeck', () => {
             const newDeck = new Packet(deck, deck.length); 
-            console.log(newDeck.pile[0].action)
             newDeck.shuffle(newDeck.pile);
-            console.log(newDeck.pile[0].action)
             socket.emit("suffleDeck", newDeck)
         });
 
