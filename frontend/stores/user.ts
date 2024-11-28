@@ -11,119 +11,96 @@ const socket = io('/play', {
   path: '/api/socket.io'
 });
 
-export const useMyUserStore = defineStore({
+export const useUserStore = defineStore({
     id: 'myUserStore',
 
     state: () => ({
         deck: [] as Card[],
-        hand: [] as Card[],        
+        hand: [] as Card[],    
         lastPlayedCard: null as Card | null,
         isHitmanActive: false,
-        players: [] as Player[]
+        players: [] as Player[],
+        uuid: ''
     }),
+
     actions: {
         distributeCard(socket: Socket) {
-            socket.emit("distributeCard")
+            socket.emit("distributeCard");
         },
-        updateHands(players: { uuid: string, hand: Card[] }[]) {
-            players.forEach(playerData => {
-                const player = this.players.find(p => p.uuid === playerData.uuid)
+
+        updateHands(playersData: { uuid: string, hand: Card[] }[]) {
+            playersData.forEach(playerData => {
+                const player = this.players.find(p => p.uuid === playerData.uuid);
                 if (player) {
-                    player.hand = playerData.hand
+                    player.hand = playerData.hand;
                 } else {
                     this.players.push({
                         uuid: playerData.uuid,
                         hand: playerData.hand,
                         name: "",
                         status: Status.ALIVE
-                    })
+                    });
                 }
-            })
+            });
         },
+
         useCard(nb: number, socket: Socket) {
-            const tour = new Tour(Actions.PLAY_CARD)
-            const state = tour.playCard(this.hand, nb)
-            const cardPlayed = state.get(this.hand)
-      
-      /*if(cardPlayed?.action == Actions.PICK_BOTTOM){
-        tour.drawBottomCard(this.deck);
-      }*/
-      if(cardPlayed){
-        if(cardPlayed.action != Actions.REPLICATE && cardPlayed.action != Actions.HITMAN){
-          this.lastPlayedCard = cardPlayed
-        }
-      }
+            const tour = new Tour(Actions.PLAY_CARD);
+            const state = tour.playCard(this.hand, nb);
+            const cardPlayed = state.get(this.hand);
 
-      if (Array.from(state.keys())[0]) {
-        this.hand = Array.from(state.keys())[0]; //nouveau deck
-      }
-
-      if(cardPlayed){
-        this.playerChoice(cardPlayed.action, socket)
-      }
-    },
-    executeHitmanAction(targetNumber: number) {
-      this.isHitmanActive = false; // Masquer le formulaire après soumission
-      this.deck.splice(targetNumber-1, 0, new Card(Actions.HITMAN, "", "Kill yourself when his picked.", ""));
-    },
-    activateHitmanEffect() {
-      console.log("Effet HITMAN activé.");
-      this.isHitmanActive = true; // Affiche le formulaire pour choisir une cible
-    },
-    replicate(lastCard: Card){
-      const tour = new Tour(Actions.REPLICATE);
-      /*if(lastCard.action == Actions.BLOCK){
-          //EMPECHER LE JOUEUR DE JOUER
-      }*/
-     //console.log(lastCard)
-      return lastCard
-    },
-    playerChoice(choice: Actions, socket: Socket){
-      switch (choice) {
-        case Actions.DRAW:
-            socket.emit('drawCard') 
-            break;
-        case Actions.HITMAN:
-            this.isHitmanActive = true;
-            break;
-        case Actions.SKIP:
-            return "Skip the next player's turn.";
-            break;
-        case Actions.REVERSE:
-            return "Reverse the direction of play.";
-            break;
-        case Actions.BOMB:
-            return "Bomb a card in your hand.";
-            break;
-        case Actions.STEAL:
-            return "Steal a card from an opponent.";
-            break;
-        case Actions.SHUFFLE:
-            console.log("cc cv")
-            socket.emit('suffleDeck') 
-            break;
-        case Actions.EYE:
-            socket.emit('seeCards') 
-            break;
-        case Actions.BLOCK:
-            return "Block the next action against you.";
-            break;
-        case Actions.REPLICATE:
-            socket.emit('replicateCard')
-        case Actions.PICK_BOTTOM:
-          if(this.deck) {
-            socket.emit('drawBottomCard')
-            break;
-          }
-        default:
-            return "No description available.";
-            break;
+            if (cardPlayed && cardPlayed.action !== Actions.REPLICATE && cardPlayed.action !== Actions.HITMAN) {
+                this.lastPlayedCard = cardPlayed;
             }
-        }
+
+            this.hand = Array.from(state.keys())[0] || this.hand; 
+
+            if (cardPlayed) {
+                this.playerChoice(cardPlayed.action, socket);
+            }
+        },
+
+        executeHitmanAction(targetNumber: number) {
+            this.isHitmanActive = false;
+            this.deck.splice(targetNumber - 1, 0, new Card(Actions.HITMAN, "", "Kill yourself when it's picked.", ""));
+        },
+
+        activateHitmanEffect() {
+            this.isHitmanActive = true;
+        },
+
+        replicate(lastCard: Card) {
+            if (lastCard) {
+                const tour = new Tour(Actions.REPLICATE);
+                return lastCard;
+            } else {
+                this.hand.push(new Card(Actions.REPLICATE, 'blue', "Replicate a card from the discard pile.", ""));
+            }
+        },
+
+        playerChoice(choice: Actions, socket: Socket) {
+            const actionHandlers: Record<Actions, () => void | string> = {
+                [Actions.DRAW]: () => socket.emit('drawCard'),
+                [Actions.HITMAN]: () => { this.isHitmanActive = true; },
+                [Actions.SKIP]: () => "Skip the next player's turn.",
+                [Actions.REVERSE]: () => "Reverse the direction of play.",
+                [Actions.BOMB]: () => "Bomb a card in your hand.",
+                [Actions.STEAL]: () => "Steal a card from an opponent.",
+                [Actions.SHUFFLE]: () => socket.emit('suffleDeck'),
+                [Actions.EYE]: () => socket.emit('seeCards'),
+                [Actions.BLOCK]: () => "Block the next action against you.",
+                [Actions.REPLICATE]: () => this.replicate(this.lastPlayedCard),
+                [Actions.PICK_BOTTOM]: () => socket.emit('drawBottomCard'),
+                default: () => "No description available."
+            };
+
+            return actionHandlers[choice]?.() || actionHandlers.default();
+        },
     },
+
     getters: {
-        getPlayersHands(): any {
-            return this.players.map(player => player.hand)
+        getPlayersHands() {
+            return this.players.map(player => player.hand);
         }
-      }
-})
+    }
+});

@@ -26,21 +26,10 @@ export function initSocket(event: H3Event) {
     // @ts-ignore
     io.attach(event.node.res.socket?.server)
 
-    io.of('/chat').on('connection', (socket) => {
-        socket.emit('connected', { message: 'Connection established.' })
-        socket.on('chat', (text: string) => {
-            io.of('chat').emit('chat', { id: socket.id, text })
-        })
-    })
-
     io.of('/play').on('connection', (socket) => {
-        console.log('New player connected:', socket.id)
-
-        socket.emit('connected', { message: 'Connection established.' })
-        
         socket.on('player', (playerData: Player) => {
             const player = new Player(playerData.uuid, playerData.name, playerData.hand, playerData.status) 
-            players.set(socket.id, player)  
+            players.set(player.uuid, player)  
             console.log('Player added:', player)
 
             if (deck.length === 0) {
@@ -52,20 +41,20 @@ export function initSocket(event: H3Event) {
         })
 
         socket.on('distributeCard', () => {
-            players.forEach(player => {
-                player.hand.push(new Card(Actions.REVIVE, "", "Save you from being killed.", ""))
+            players.forEach((player) => {
+                player.hand.push(new Card(Actions.REVIVE, "red", "apagnan", ""))
 
-                deck.slice(0, 4).forEach(card => {
-                    player.hand.push(card)  
-                })
-            });
+                if(player.name === "A") {
+                    player.hand.push(new Card(Actions.BLOCK, "red", "apagnan", ""))
+                }
+            })
         
             io.of('/play').emit('updateHands', Array.from(players.values()).map(player => ({
                 uuid: player.uuid,
                 hand: player.hand
-            })))
+            })));
         });
-
+        
         socket.on('drawCard', () => {
             if (deck.length > 0) {
                 const drawnCard = deck.shift() 
@@ -92,7 +81,6 @@ export function initSocket(event: H3Event) {
         });
 
         socket.on('suffleDeck', () => {
-            console.log("oui et toi")
             const newDeck = new Packet(deck, deck.length); 
             console.log(newDeck.pile[0].action)
             newDeck.shuffle(newDeck.pile);
