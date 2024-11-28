@@ -25,6 +25,7 @@
                 <div class="flex mt-3 space-x-2">
                     <AppCard :model-value="deck[0]?.action" class="cursor-pointer" />
                     <AppCard :model-value="deck[deck.length - 1]?.action" class="cursor-pointer" />
+                    <AppCard :model-value="userStore.lastPlayedCard?.action" class="cursor-pointer" />
                 </div>
             </div>
 
@@ -152,6 +153,14 @@ onMounted(() => {
     socket.value.on('suffleDeck', (cards: Card[]) => {
         userStore.deck = cards
         deck.value = cards
+    })
+
+    socket.value.on('replicateCard', () => {
+        if(userStore.lastPlayedCard){
+            userStore.hand.push(userStore.lastPlayedCard)
+            console.log(userStore.lastPlayedCard.action)
+        }
+        playerMove(userStore.hand.length - 1, false)
     })
 })
 

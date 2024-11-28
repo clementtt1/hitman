@@ -17,7 +17,6 @@ export default class Tour implements ITour {
         if (cardPlayed) {
             hashMap.set(packet, cardPlayed);
         }
-        
         return hashMap;
     }
 }
