@@ -62,6 +62,24 @@ export function initSocket(event: H3Event) {
             io.of('/play').emit('players', Array.from(players.values()))
         })
 
+        socket.on('cardPlayed', ({ card, playerUuid }: { card: Card, playerUuid: string }) => {
+            const player = players.get(playerUuid);
+        
+            if (player) {
+                const cardIndex = player.hand.findIndex(c => c.action === card.action && c.color === card.color);
+                if (cardIndex !== -1) {
+                    player.hand.splice(cardIndex, 1);
+                }
+        
+                io.of('/play').emit('updateHands', Array.from(players.values()).map(p => ({
+                    uuid: p.uuid,
+                    hand: p.hand
+                })));
+        
+                io.of('/play').emit('updateLastPlayedCard', card);
+            }
+        });
+        
         socket.on('drawCard', () => {
             if (deck.length > 0) {
                 const drawnCard = deck.shift() 
@@ -84,10 +102,17 @@ export function initSocket(event: H3Event) {
         });
 
         socket.on('suffleDeck', () => {
-            const newDeck = new Packet(deck, deck.length); 
+            const newDeck = new Packet(deck, deck.length);
             newDeck.shuffle(newDeck.pile);
-            socket.emit("suffleDeck", newDeck)
+            deck = newDeck.pile;
+            io.of('/play').emit('deck', deck);
+            io.of('/play').emit('updateHands', Array.from(players.values()).map(p => ({
+                uuid: p.uuid,
+                hand: p.hand
+            })));
         });
+        
+        
 
         socket.on('replicateCard', () => {
             socket.emit('replicateCard');

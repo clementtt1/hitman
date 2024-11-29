@@ -45,20 +45,19 @@ export const useUserStore = defineStore({
         },
 
         useCard(index: number, socket: Socket) {
-            const tour = new Tour(Actions.PLAY_CARD);
-            const state = tour.playCard(this.hand, index);
-            const cardPlayed = state.get(this.hand);
-
-            if (cardPlayed && cardPlayed.action !== Actions.REPLICATE && cardPlayed.action !== Actions.HITMAN) {
-                this.lastPlayedCard = cardPlayed;
-            }
-
-            this.hand = Array.from(state.keys())[0] || this.hand; 
-
-            if (cardPlayed) {
-                this.playerChoice(cardPlayed.action, socket);
-            }
-        },
+          const tour = new Tour(Actions.PLAY_CARD);
+          const state = tour.playCard(this.hand, index);
+          const cardPlayed = state.get(this.hand);
+      
+          if (cardPlayed) {
+              this.lastPlayedCard = cardPlayed; // Mise à jour locale
+              socket.emit('cardPlayed', { card: cardPlayed, playerUuid: this.uuid }); // Envoi au serveur
+              this.playerChoice(cardPlayed.action, socket);
+          }
+      
+          // Mettre à jour localement la main
+          this.hand = Array.from(state.keys())[0] || this.hand;
+      },
 
         executeHitmanAction(targetNumber: number) {
             this.isHitmanActive = false;

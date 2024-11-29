@@ -43,6 +43,7 @@ import { Actions } from '~/enums/Actions'
 import { io, Socket } from 'socket.io-client'
 import type Card from '~/classes/Card'
 import AppCard from "@/components/AppCard.vue"
+import { Status } from '~/enums/Status'
 
 const userStore = useUserStore()
 const isHitmanActive = computed(() => userStore.isHitmanActive)
@@ -64,17 +65,33 @@ const submitHitmanAction = () => {
 onMounted(() => {
     socket.value = io('/play', { path: '/api/socket.io' })
 
+    socket.value.on('updateLastPlayedCard', (card: Card) => {
+        userStore.lastPlayedCard = card;
+    });
+
+    socket.value.on('deck', (updatedDeck: Card[]) => {
+        userStore.deck = updatedDeck; 
+    });
+
     socket.value.on('updateHands', (playersList: { uuid: string, hand: Card[] }[]) => {
         playersList.forEach(playerData => {
-            const player = userStore.players.find(p => p.uuid === playerData.uuid)
+            const player = userStore.players.find(p => p.uuid === playerData.uuid);
             if (player) {
-                player.hand = playerData.hand
+                player.hand = playerData.hand;
+
                 if (player.uuid === userStore.uuid) {
-                    userStore.hand = playerData.hand
+                    userStore.hand = playerData.hand;
                 }
+            } else {
+                userStore.players.push({
+                    uuid: playerData.uuid,
+                    hand: playerData.hand,
+                    name: "",
+                    status: Status.ALIVE
+                });
             }
-        })
-    })
+        });
+    });
 
     socket.value.on('cardDrawn', (drawnCard: Card) => {
         if (drawnCard) userStore.hand.push(drawnCard)
@@ -88,9 +105,10 @@ onMounted(() => {
         console.log(cards)
     })
 
-    socket.value.on('suffleDeck', (cards: Card[]) => {
-        userStore.deck = cards
-    })
+    socket.value.on('suffleDeck', (updatedDeck: Card[]) => {
+        userStore.deck = updatedDeck;
+    });
+
 
     socket.value.on('replicateCard', () => {
         if(userStore.lastPlayedCard){
@@ -98,6 +116,8 @@ onMounted(() => {
         }
         playerMove(userStore.hand.length - 1, false)
     })
+
+    
 })
 
 onBeforeUnmount(() => {
